@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  posts        Post[]
+  comments     Comment[]
+}
+
+model Post {
+  id          String    @id @default(uuid())
+  title       String
+  description String
+  mediaUrl    String
+  mediaType   String    // "image" or "video"
+  mapName     String
+  siteName    String
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  createdAt   DateTime  @default(now())
+  comments    Comment[]
+  media       PostMedia[]
+}
+
+model PostMedia {
+  id        String   @id @default(uuid())
+  url       String
+  type      String   // "image" or "video"
+  order     Int      @default(0)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model Comment {
+  id              String    @id @default(uuid())
+  content         String
+  postId          String
+  post            Post      @relation(fields: [postId], references: [id])
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  parentCommentId String?
+  parentComment   Comment?  @relation("ReplyTo", fields: [parentCommentId], references: [id])
+  replies         Comment[] @relation("ReplyTo")
+  createdAt       DateTime  @default(now())
+}
